@@ -19,20 +19,77 @@ public class Main {
             System.out.println("5. Keluar");
             System.out.print("Pilih menu (1-5): ");
 
-            String input = scanner.nextLine();
+            int pilihan = 0;
+            try {
+                pilihan = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                pilihan = 0; 
+            }
 
-            switch (input) {
-                case "1":
-                    System.out.println("-> Fitur Tambah Tugas (Belum dibuat)");
+            switch (String.valueOf(pilihan)) { 
+               case "1":
+                    System.out.println("Masukan nama tugas: ");
+                    String judul = scanner.nextLine();
+
+                    if (judul.trim().isEmpty()) {
+                   System.out.println("Gagal: Nama tugas tidak boleh kosong!");
+                   break;
+                    } 
+                    Task tugasBaru = new Task(judul);
+                    taskList.add(tugasBaru);
+                    System.out.println("Berhasil disimpan!");
                     break;
                 case "2":
-                    System.out.println("-> Fitur Lihat Tugas (Belum dibuat)");
+                    if (taskList.isEmpty()){
+                        System.out.println("Belum ada tugas, silahkan tambahkan tugas pada menu 1!");
+                    } else {
+                        System.out.println("------------------------------------");
+                        System.out.println("Total tugas: " + taskList.size());
+                        for( int i = 0; i < taskList.size(); i++){
+                            Task t = taskList.get(i);
+                            System.out.println((i+1)+ "."+ t.getStatusSymbol()+ " " + t.getTitle());
+                        }
+                        System.out.println("------------------------------------");
+                    }
                     break;
                 case "3":
-                    System.out.println("-> Fitur Tandai Selesai (Belum dibuat)");
+                    if (taskList.isEmpty()){
+                        System.out.println("Daftar kosong, tidak ada yang bisa ditandai.");
+                        break;
+                    }
+                    System.out.println("Nomor tugas yang selesai : ");
+                   try {
+                    int noSelesai = Integer.parseInt(scanner.nextLine());
+
+                    if(noSelesai > 0 && noSelesai <= taskList.size()){
+                        Task t = taskList.get(noSelesai-1);
+                        t.setCompleted(true);
+                        System.out.println("Bagus! Tugas " + t.getTitle() + " ditandai selesai.");
+                    } else {
+                        System.out.println("Nomor tidak valid!");
+                    }
+                 } catch (NumberFormatException e) {
+                          System.out.println("⚠️ Input harus angka, bukan huruf!");
+                          }
                     break;
                 case "4":
-                    System.out.println("-> Fitur Hapus Tugas (Belum dibuat)");
+                    if (taskList.isEmpty()) {
+                        System.out.println("Daftar kosong, tidak bisa dihapus.");
+                        break;
+                    }
+                    System.out.println("Nomor tugas yang akan dihapus : ");
+                   try {
+                    int noHapus = Integer.parseInt(scanner.nextLine());
+
+                    if (noHapus > 0 && noHapus <= taskList.size()){
+                        Task removedTask = taskList.remove(noHapus-1);
+                        System.out.println("Tugas '" + removedTask.getTitle() + "' berhasil dihapus.");
+                    } else {
+                         System.out.println(" Nomor tidak valid!");
+                        }
+                   } catch (NumberFormatException e) {
+                        System.out.println(" Input harus angka, bukan huruf!");
+                        }
                     break;
                 case "5":
                     System.out.println("Terima kasih! Sampai jumpa.");
@@ -44,3 +101,4 @@ public class Main {
         }
     }
 }
+               
