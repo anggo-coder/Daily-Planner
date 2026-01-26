@@ -1,10 +1,12 @@
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.io.*;
 
 public class Main {
     static ArrayList<Task> taskList = new ArrayList<>();
-
+   
     public static void main(String[] args) {
+        muatData();
         Scanner scanner = new Scanner(System.in);
         boolean isRunning = true;
 
@@ -92,13 +94,57 @@ public class Main {
                         }
                     break;
                 case "5":
-                    System.out.println("Terima kasih! Sampai jumpa.");
-                    isRunning = false; // Ini akan mematikan loop
-                    break;
+                System.out.println("Sedang menyimpan data...");
+                simpanData(); // <--- PANGGIL METHOD DI SINI
+                System.out.println("Terima kasih! Sampai jumpa.");
+                isRunning = false;
+                break;
                 default:
-                    System.out.println("Pilihan tidak valid! Masukkan angka 1-5.");
+                System.out.println("Pilihan tidak valid! Masukkan angka 1-5.");
             }
         }
+        
     }
-}
-               
+    private static void simpanData(){
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("data.txt"))){
+            for (Task t : taskList){
+                String status = t.isCompleted() ? "1" : "0" ;
+                writer.write(status + ";" + t.getTitle());
+                writer.newLine();
+            }
+            System.out.println("Data berhasil disimpan ke data.txt");
+            } catch (IOException e) {
+             System.out.println("Gagal menyimpan data: " + e.getMessage());
+            }
+        }
+
+    
+
+    private static void muatData() {
+        File file = new File("data.txt");
+
+        if (!file.exists()){
+            return;
+        }
+        try (BufferedReader reader= new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine())!= null) {
+                String[] parts = line.split(";");
+
+                if (parts.length == 2){
+                    String status = parts[0];
+                    String title = parts[1];
+
+                    Task t = new Task(title);
+                    if (status.equals("1")){
+                        t.markAsCompleted();
+                    }
+                    taskList.add(t);
+                }
+            }
+            System.out.println("Data lama berhasil dimuat kembali!");
+        } catch (IOException e){
+            System.out.println("Gagal memuat data: " + e.getMessage());
+        }
+        }
+    }

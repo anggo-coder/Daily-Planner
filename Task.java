@@ -22,4 +22,8 @@ public class Task {
     public String getStatusSymbol() {
         return (isCompleted) ? "[v]" : "[ ]";
     }
+
+    public void markAsCompleted() {
+        this.isCompleted = true;
+    }
 }
