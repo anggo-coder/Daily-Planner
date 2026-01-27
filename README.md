@@ -1,57 +1,40 @@
 # 📝 Daily Planner CLI (Java)
 
-Aplikasi manajemen tugas (To-Do List) berbasis Command Line Int# 📝 Daily Planner CLI (Java)
+Aplikasi manajemen tugas (To-Do List) berbasis Command Line Interface (CLI) yang dibangun dengan Java. Proyek ini dikembangkan secara bertahap untuk mempelajari konsep OOP, Manajemen File, dan Manipulasi Tanggal.
 
-Aplikasi manajemen tugas (To-Do List) berbasis Command Line Interface (CLI) yang dibuat menggunakan bahasa Java. Aplikasi ini membantu pengguna mencatat, memantau, dan mengelola tugas harian dengan fitur penyimpanan data otomatis.
+---
 
-## 🚀 Fitur Utama
+## 📅 Riwayat Update (Changelog)
 
-Aplikasi ini sudah mendukung fitur **CRUD** (Create, Read, Update, Delete) dan **Data Persistence**:
+Berikut adalah perjalanan pengembangan aplikasi ini dari versi awal hingga sekarang.
 
-- [x] **Tambah Tugas**: Menambahkan tugas baru ke dalam daftar.
-- [x] **Lihat Daftar**: Menampilkan semua tugas dengan indikator status (✔ Selesai / [ ] Belum).
-- [x] **Tandai Selesai**: Mengubah status tugas yang sudah dikerjakan.
-- [x] **Hapus Tugas**: Menghapus tugas yang tidak diinginkan dari daftar.
-- [x] **💾 Simpan & Muat Data (Baru)**: Data tugas disimpan secara permanen ke file `data.txt`, sehingga tidak hilang saat aplikasi ditutup.
+### v1.1: The "Smart" Update (Versi Saat Ini) 🚀
+*Fokus: Penambahan fitur tanggal, pencarian, dan perbaikan UX.*
 
-## 🛠️ Teknologi yang Digunakan
+- **[Baru] Sistem Deadline:** Integrasi `java.time.LocalDate`. Setiap tugas kini memiliki tanggal tenggat waktu (deadline).
+- **[Baru] Fitur Pencarian (Search):** Mencari tugas spesifik menggunakan kata kunci (case-insensitive).
+- **[Update] Struktur Data:** Format penyimpanan di `data.txt` diperbarui menjadi 3 kolom (`status;judul;deadline`).
+- **[Fix] Validasi Input:** Mencegah aplikasi crash jika user memasukkan format tanggal yang salah atau data kosong.
+- **[Fix] Penomoran List:** Daftar tugas kini dimulai dari angka 1 (sebelumnya index 0) agar lebih mudah dibaca.
 
-- **Bahasa**: Java (JDK 8+)
-- **Konsep**:
-  - OOP (Object-Oriented Programming)
-  - Java Collections (`ArrayList`)
-  - Exception Handling (`try-catch`)
-  - File I/O (`BufferedReader`, `BufferedWriter`) untuk membaca/menulis file `.txt`.
+### v1.0: The "Persistence" Update (Versi Awal) 💾
+*Fokus: Fitur dasar CRUD dan penyimpanan data permanen.*
 
-## 📂 Struktur Penyimpanan Data
+- **Fitur CRUD Dasar:**
+  - [x] Tambah Tugas
+  - [x] Lihat Daftar Tugas
+  - [x] Tandai Selesai
+  - [x] Hapus Tugas
+- **Data Persistence:** Implementasi `BufferedWriter` dan `BufferedReader` agar data tersimpan di file `.txt` dan tidak hilang saat aplikasi ditutup.
+- **Exception Handling:** Menangani error input angka (NumberFormatException).
 
-Data disimpan dalam file `data.txt` dengan format CSV sederhana (titik koma):
+---
+
+## 📂 Evolusi Struktur Data
+
+Perubahan format penyimpanan data di file `data.txt` seiring update versi:
+
+**Format v1.0 (Lama):**
 ```text
-0;Belajar Java Dasar  <-- (0 = Belum Selesai)
-1;Mengerjakan Laporan <-- (1 = Sudah Selesai)erface (CLI) yang dibuat menggunakan bahasa Java. Aplikasi ini membantu pengguna mencatat, memantau, dan mengelola tugas harian dengan fitur penyimpanan data otomatis.
-
-## 🚀 Fitur Utama
-
-Aplikasi ini sudah mendukung fitur **CRUD** (Create, Read, Update, Delete) dan **Data Persistence**:
-
-- [x] **Tambah Tugas**: Menambahkan tugas baru ke dalam daftar.
-- [x] **Lihat Daftar**: Menampilkan semua tugas dengan indikator status (✔ Selesai / [ ] Belum).
-- [x] **Tandai Selesai**: Mengubah status tugas yang sudah dikerjakan.
-- [x] **Hapus Tugas**: Menghapus tugas yang tidak diinginkan dari daftar.
-- [x] **💾 Simpan & Muat Data (Baru)**: Data tugas disimpan secara permanen ke file `data.txt`, sehingga tidak hilang saat aplikasi ditutup.
-
-## 🛠️ Teknologi yang Digunakan
-
-- **Bahasa**: Java (JDK 8+)
-- **Konsep**:
-  - OOP (Object-Oriented Programming)
-  - Java Collections (`ArrayList`)
-  - Exception Handling (`try-catch`)
-  - File I/O (`BufferedReader`, `BufferedWriter`) untuk membaca/menulis file `.txt`.
-
-## 📂 Struktur Penyimpanan Data
-
-Data disimpan dalam file `data.txt` dengan format CSV sederhana (titik koma):
-```text
-0;Belajar Java Dasar  <-- (0 = Belum Selesai)
-1;Mengerjakan Laporan <-- (1 = Sudah Selesai)
+0;Belajar Java Dasar
+(Hanya Status dan Judul)

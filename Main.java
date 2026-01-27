@@ -1,7 +1,8 @@
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.io.*;
-import java.lang.String;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 public class Main {
     static ArrayList<Task> taskList = new ArrayList<>();
@@ -39,9 +40,18 @@ public class Main {
                    System.out.println("Gagal: Nama tugas tidak boleh kosong!");
                    break;
                     } 
-                    Task tugasBaru = new Task(judul);
-                    taskList.add(tugasBaru);
-                    System.out.println("Berhasil disimpan!");
+                    System.out.print("Masukkan deadline (format: YYYY-MM-DD, contoh: 2024-02-14): ");
+                    String tglInput = scanner.nextLine();
+                    
+                    try {
+                        LocalDate deadline = LocalDate.parse(tglInput);
+                       
+                        Task tugasBaru = new Task(judul, deadline);
+                        taskList.add(tugasBaru);
+                        System.out.println("Berhasil disimpan!");
+                    } catch (DateTimeParseException e) {
+                        System.out.println("Gagal: Format tanggal salah! Gunakan YYYY-MM-DD.");
+                    }
                     break;
                 case "2":
                     if (taskList.isEmpty()){
@@ -49,10 +59,20 @@ public class Main {
                     } else {
                         System.out.println("------------------------------------");
                         System.out.println("Total tugas: " + taskList.size());
-                        for( int i = 0; i < taskList.size(); i++){
-                            Task t = taskList.get(i);
-                            System.out.println((i+1)+ "."+ t.getStatusSymbol()+ " " + t.getTitle());
+                   for (int i = 0; i < taskList.size(); i++) {
+                        Task t = taskList.get(i);
+                        LocalDate hariIni = LocalDate.now();
+                        String infoWaktu = "";
+
+                        // Logika pengecekan waktu
+                        if (t.getDeadline().isBefore(hariIni) && !t.isCompleted()) {
+                            infoWaktu = " [⚠️ TERLAMBAT!]";
+                        } else if (t.getDeadline().isEqual(hariIni)) {
+                            infoWaktu = " [📅 HARI INI!]";
                         }
+
+                        System.out.println((i + 1) + ". " + t.getStatusSymbol() + " " + t.getTitle() + " (Deadline: " + t.getDeadline() + ")" + infoWaktu);
+}
                         System.out.println("------------------------------------");
                     }
                     break;
@@ -130,7 +150,7 @@ public class Main {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("data.txt"))){
             for (Task t : taskList){
                 String status = t.isCompleted() ? "1" : "0" ;
-                writer.write(status + ";" + t.getTitle());
+                writer.write(status + ";" + t.getTitle() + ";" + t.getDeadline());
                 writer.newLine();
             }
             System.out.println("Data berhasil disimpan ke data.txt");
@@ -152,11 +172,12 @@ public class Main {
             while ((line = reader.readLine())!= null) {
                 String[] parts = line.split(";");
 
-                if (parts.length == 2){
+                if (parts.length == 3){
                     String status = parts[0];
                     String title = parts[1];
+                    LocalDate deadline = LocalDate.parse(parts[2]);
 
-                    Task t = new Task(title);
+                    Task t = new Task(title, deadline);
                     if (status.equals("1")){
                         t.markAsCompleted();
                     }
