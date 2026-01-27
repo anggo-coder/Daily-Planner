@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.io.*;
+import java.lang.String;
 
 public class Main {
     static ArrayList<Task> taskList = new ArrayList<>();
@@ -18,8 +19,9 @@ public class Main {
             System.out.println("2. Lihat Daftar Tugas");
             System.out.println("3. Tandai Selesai");
             System.out.println("4. Hapus Tugas");
-            System.out.println("5. Keluar");
-            System.out.print("Pilih menu (1-5): ");
+            System.out.println("5. Cari Tugas");
+            System.out.println("6. Keluar");
+            System.out.print("Pilih menu : ");
 
             int pilihan = 0;
             try {
@@ -29,7 +31,7 @@ public class Main {
             }
 
             switch (String.valueOf(pilihan)) { 
-               case "1":
+                case "1":
                     System.out.println("Masukan nama tugas: ");
                     String judul = scanner.nextLine();
 
@@ -93,14 +95,33 @@ public class Main {
                         System.out.println(" Input harus angka, bukan huruf!");
                         }
                     break;
-                case "5":
-                System.out.println("Sedang menyimpan data...");
-                simpanData(); // <--- PANGGIL METHOD DI SINI
-                System.out.println("Terima kasih! Sampai jumpa.");
-                isRunning = false;
-                break;
-                default:
-                System.out.println("Pilihan tidak valid! Masukkan angka 1-5.");
+                case "5" :
+                        System.out.println("Masukkan kata kunci pencarian : ");
+                        String keyword = scanner.nextLine();
+                        boolean ditemukan = false;
+                        for(int i = 0; i < taskList.size(); i++){
+                           
+                            Task t = taskList.get(i);
+
+                            if (t.getTitle().toLowerCase().contains(keyword.toLowerCase())){
+                                String status = t.isCompleted() ? "[v]" : "[ ]";
+                                System.out.println(i + "." + status + " "+ t.getTitle());
+                                ditemukan = true;
+                            }
+                    }
+                        if (!ditemukan){
+                                System.out.println("Tidak ada tugas yang cocok dengan kata kunci '" + keyword + "'.");
+                            }
+                    break;
+
+                case "6":
+                    System.out.println("Sedang menyimpan data...");
+                    simpanData(); // <--- PANGGIL METHOD DI SINI
+                    System.out.println("Terima kasih! Sampai jumpa.");
+                    isRunning = false;
+                    break;
+                    default:
+                    System.out.println("Pilihan tidak valid! Masukkan angka 1-5.");
             }
         }
         
@@ -146,5 +167,5 @@ public class Main {
         } catch (IOException e){
             System.out.println("Gagal memuat data: " + e.getMessage());
         }
-        }
+      }
     }
