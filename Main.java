@@ -1,192 +1,214 @@
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.*;
 import java.io.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
 public class Main {
     static ArrayList<Task> taskList = new ArrayList<>();
-   
+
     public static void main(String[] args) {
         muatData();
         Scanner scanner = new Scanner(System.in);
         boolean isRunning = true;
 
         System.out.println("Selamat Datang di Daily Planner!");
-
+        tampilkanDashboard();
         while (isRunning) {
-            System.out.println("\n=== MENU UTAMA ===");
-            System.out.println("1. Tambah Tugas");
-            System.out.println("2. Lihat Daftar Tugas");
-            System.out.println("3. Tandai Selesai");
-            System.out.println("4. Hapus Tugas");
-            System.out.println("5. Cari Tugas");
-            System.out.println("6. Keluar");
+            tampilkanMenu();
             System.out.print("Pilih menu : ");
+            String pilihan = scanner.nextLine();
 
-            int pilihan = 0;
-            try {
-                pilihan = Integer.parseInt(scanner.nextLine());
-            } catch (NumberFormatException e) {
-                pilihan = 0; 
-            }
-
-            switch (String.valueOf(pilihan)) { 
-                case "1":
-                    System.out.println("Masukan nama tugas: ");
-                    String judul = scanner.nextLine();
-
-                    if (judul.trim().isEmpty()) {
-                   System.out.println("Gagal: Nama tugas tidak boleh kosong!");
-                   break;
-                    } 
-                    System.out.print("Masukkan deadline (format: YYYY-MM-DD, contoh: 2024-02-14): ");
-                    String tglInput = scanner.nextLine();
-                    
-                    try {
-                        LocalDate deadline = LocalDate.parse(tglInput);
-                       
-                        Task tugasBaru = new Task(judul, deadline);
-                        taskList.add(tugasBaru);
-                        System.out.println("Berhasil disimpan!");
-                    } catch (DateTimeParseException e) {
-                        System.out.println("Gagal: Format tanggal salah! Gunakan YYYY-MM-DD.");
-                    }
-                    break;
-                case "2":
-                    if (taskList.isEmpty()){
-                        System.out.println("Belum ada tugas, silahkan tambahkan tugas pada menu 1!");
-                    } else {
-                        System.out.println("------------------------------------");
-                        System.out.println("Total tugas: " + taskList.size());
-                   for (int i = 0; i < taskList.size(); i++) {
-                        Task t = taskList.get(i);
-                        LocalDate hariIni = LocalDate.now();
-                        String infoWaktu = "";
-
-                        // Logika pengecekan waktu
-                        if (t.getDeadline().isBefore(hariIni) && !t.isCompleted()) {
-                            infoWaktu = " [⚠️ TERLAMBAT!]";
-                        } else if (t.getDeadline().isEqual(hariIni)) {
-                            infoWaktu = " [📅 HARI INI!]";
-                        }
-
-                        System.out.println((i + 1) + ". " + t.getStatusSymbol() + " " + t.getTitle() + " (Deadline: " + t.getDeadline() + ")" + infoWaktu);
-}
-                        System.out.println("------------------------------------");
-                    }
-                    break;
-                case "3":
-                    if (taskList.isEmpty()){
-                        System.out.println("Daftar kosong, tidak ada yang bisa ditandai.");
-                        break;
-                    }
-                    System.out.println("Nomor tugas yang selesai : ");
-                   try {
-                    int noSelesai = Integer.parseInt(scanner.nextLine());
-
-                    if(noSelesai > 0 && noSelesai <= taskList.size()){
-                        Task t = taskList.get(noSelesai-1);
-                        t.setCompleted(true);
-                        System.out.println("Bagus! Tugas " + t.getTitle() + " ditandai selesai.");
-                    } else {
-                        System.out.println("Nomor tidak valid!");
-                    }
-                 } catch (NumberFormatException e) {
-                          System.out.println("⚠️ Input harus angka, bukan huruf!");
-                          }
-                    break;
-                case "4":
-                    if (taskList.isEmpty()) {
-                        System.out.println("Daftar kosong, tidak bisa dihapus.");
-                        break;
-                    }
-                    System.out.println("Nomor tugas yang akan dihapus : ");
-                   try {
-                    int noHapus = Integer.parseInt(scanner.nextLine());
-
-                    if (noHapus > 0 && noHapus <= taskList.size()){
-                        Task removedTask = taskList.remove(noHapus-1);
-                        System.out.println("Tugas '" + removedTask.getTitle() + "' berhasil dihapus.");
-                    } else {
-                         System.out.println(" Nomor tidak valid!");
-                        }
-                   } catch (NumberFormatException e) {
-                        System.out.println(" Input harus angka, bukan huruf!");
-                        }
-                    break;
-                case "5" :
-                        System.out.println("Masukkan kata kunci pencarian : ");
-                        String keyword = scanner.nextLine();
-                        boolean ditemukan = false;
-                        for(int i = 0; i < taskList.size(); i++){
-                           
-                            Task t = taskList.get(i);
-
-                            if (t.getTitle().toLowerCase().contains(keyword.toLowerCase())){
-                                String status = t.isCompleted() ? "[v]" : "[ ]";
-                                System.out.println(i + "." + status + " "+ t.getTitle());
-                                ditemukan = true;
-                            }
-                    }
-                        if (!ditemukan){
-                                System.out.println("Tidak ada tugas yang cocok dengan kata kunci '" + keyword + "'.");
-                            }
-                    break;
-
-                case "6":
-                    System.out.println("Sedang menyimpan data...");
-                    simpanData(); // <--- PANGGIL METHOD DI SINI
+            switch (pilihan) {
+                case "1": tambahTugas(scanner); break;
+                case "2": lihatTugas(); break;
+                case "3": tandaiSelesai(scanner); break;
+                case "4": hapusTugas(scanner); break;
+                case "5": cariTugas(scanner); break;
+                case "6": editTugas(scanner); break;
+                case "7":
                     System.out.println("Terima kasih! Sampai jumpa.");
                     isRunning = false;
                     break;
-                    default:
-                    System.out.println("Pilihan tidak valid! Masukkan angka 1-5.");
+                default:
+                    System.out.println("⚠️ Pilihan tidak valid!");
             }
         }
-        
     }
-    private static void simpanData(){
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("data.txt"))){
-            for (Task t : taskList){
-                String status = t.isCompleted() ? "1" : "0" ;
-                writer.write(status + ";" + t.getTitle() + ";" + t.getDeadline());
-                writer.newLine();
-            }
-            System.out.println("Data berhasil disimpan ke data.txt");
-            } catch (IOException e) {
-             System.out.println("Gagal menyimpan data: " + e.getMessage());
-            }
+
+    private static void tampilkanMenu() {
+        System.out.println("\n=== MENU UTAMA ===");
+        System.out.println("1. Tambah Tugas");
+        System.out.println("2. Lihat Daftar Tugas (Sorted)");
+        System.out.println("3. Tandai Selesai");
+        System.out.println("4. Hapus Tugas");
+        System.out.println("5. Cari Tugas");
+        System.out.println("6. Edit Tugas");
+        System.out.println("7. Keluar");
+    }
+
+    private static void tambahTugas(Scanner scanner) {
+        System.out.print("Masukkan nama tugas: ");
+        String judul = scanner.nextLine();
+        if (judul.trim().isEmpty()) {
+            System.out.println("Gagal: Nama tidak boleh kosong!");
+            return;
         }
 
-    
+        System.out.print("Masukkan deadline (YYYY-MM-DD): ");
+        try {
+            LocalDate deadline = LocalDate.parse(scanner.nextLine());
+            taskList.add(new Task(judul, deadline));
+            simpanData();
+            System.out.println("✅ Berhasil disimpan!");
+        } catch (DateTimeParseException e) {
+            System.out.println("⚠️ Gagal: Format tanggal salah!");
+        }
+    }
+
+    private static void lihatTugas() {
+        if (taskList.isEmpty()) {
+            System.out.println("Daftar kosong.");
+            return;
+        }
+        Collections.sort(taskList, Comparator.comparing(Task::getDeadline));
+        System.out.println("\n--- DAFTAR TUGAS ---");
+        for (int i = 0; i < taskList.size(); i++) {
+            Task t = taskList.get(i);
+            String info = t.getDeadline().isBefore(LocalDate.now()) && !t.isCompleted() ? " [⚠️ TERLAMBAT]" : "";
+            System.out.println((i + 1) + ". " + t.getStatusSymbol() + " " + t.getTitle() + " (" + t.getDeadline() + ")" + info);
+        }
+    }
+
+    private static void tandaiSelesai(Scanner scanner) {
+        lihatTugas();
+        System.out.print("Nomor tugas selesai: ");
+        try {
+            int nomor = Integer.parseInt(scanner.nextLine());
+            if (nomor > 0 && nomor <= taskList.size()) {
+                taskList.get(nomor - 1).setCompleted(true);
+                simpanData();
+                System.out.println("✅ Status diperbarui!");
+            }
+        } catch (Exception e) { System.out.println("⚠️ Input tidak valid!"); }
+    }
+
+    private static void hapusTugas(Scanner scanner) {
+        lihatTugas();
+        System.out.print("Nomor tugas yang dihapus: ");
+        try {
+            int nomor = Integer.parseInt(scanner.nextLine());
+            taskList.remove(nomor - 1);
+            simpanData();
+            System.out.println("✅ Berhasil dihapus!");
+        } catch (Exception e) { System.out.println("⚠️ Gagal menghapus!"); }
+    }
+
+    private static void cariTugas(Scanner scanner) {
+        System.out.print("Kata kunci: ");
+        String key = scanner.nextLine().toLowerCase();
+        boolean ditemukan = false;
+        for (Task t : taskList) {
+            if (t.getTitle().toLowerCase().contains(key)) {
+                System.out.println(t.getStatusSymbol() + " " + t.getTitle() + " (" + t.getDeadline() + ")");
+                ditemukan = true;
+            }
+        }
+        if (!ditemukan) System.out.println("Tidak ditemukan.");
+    }
+
+    private static void editTugas(Scanner scanner) {
+        lihatTugas();
+        System.out.print("Nomor yang akan diedit: ");
+        try {
+            int nomor = Integer.parseInt(scanner.nextLine());
+            Task t = taskList.get(nomor - 1);
+            
+            System.out.print("Judul baru (kosongkan jika tetap): ");
+            String jBaru = scanner.nextLine();
+            if (!jBaru.isEmpty()) t.setTitle(jBaru);
+
+            System.out.print("Deadline baru YYYY-MM-DD (kosongkan jika tetap): ");
+            String dBaru = scanner.nextLine();
+            if (!dBaru.isEmpty()) t.setDeadline(LocalDate.parse(dBaru));
+
+            simpanData();
+            System.out.println("✅ Berhasil diupdate!");
+        } catch (Exception e) { System.out.println("⚠️ Gagal edit!"); }
+    }
+
+    private static void simpanData() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("data.txt"))) {
+            for (Task t : taskList) {
+                writer.write((t.isCompleted() ? "1" : "0") + ";" + t.getTitle() + ";" + t.getDeadline());
+                writer.newLine();
+            }
+        } catch (IOException e) { System.out.println("⚠️ Error simpan data."); }
+    }
 
     private static void muatData() {
         File file = new File("data.txt");
-
-        if (!file.exists()){
-            return;
-        }
-        try (BufferedReader reader= new BufferedReader(new FileReader(file))) {
+        if (!file.exists()) return;
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
-            while ((line = reader.readLine())!= null) {
-                String[] parts = line.split(";");
-
-                if (parts.length == 3){
-                    String status = parts[0];
-                    String title = parts[1];
-                    LocalDate deadline = LocalDate.parse(parts[2]);
-
-                    Task t = new Task(title, deadline);
-                    if (status.equals("1")){
-                        t.markAsCompleted();
-                    }
+            while ((line = reader.readLine()) != null) {
+                String[] p = line.split(";");
+                if (p.length == 3) {
+                    Task t = new Task(p[1], LocalDate.parse(p[2]));
+                    if (p[0].equals("1")) t.markAsCompleted();
                     taskList.add(t);
                 }
             }
-            System.out.println("Data lama berhasil dimuat kembali!");
-        } catch (IOException e){
-            System.out.println("Gagal memuat data: " + e.getMessage());
-        }
-      }
+        } catch (Exception e) { System.out.println("⚠️ Gagal muat data."); }
     }
+    private static void tampilkanDashboard() {
+    System.out.println("\n----------------------------------------");
+    System.out.println("         DASHBOARD HARIAN ANDA");
+    System.out.println("----------------------------------------");
+
+    if (taskList.isEmpty()) {
+        System.out.println("   Belum ada tugas. Mulai produktif yuk!");
+        System.out.println("----------------------------------------");
+        return;
+    }
+
+    int total = taskList.size();
+    int selesai = 0;
+    int terlambat = 0;
+    int hariIni = 0;
+    LocalDate today = LocalDate.now();
+
+    for (Task t : taskList) {
+        if (t.isCompleted()) {
+            selesai++;
+        } else {
+            // Cek terlambat (Deadline sebelum hari ini & belum selesai)
+            if (t.getDeadline().isBefore(today)) {
+                terlambat++;
+            }
+            // Cek deadline hari ini
+            if (t.getDeadline().isEqual(today)) {
+                hariIni++;
+            }
+        }
+    }
+
+    System.out.println(" Total Tugas   : " + total);
+    System.out.println(" Selesai       : " + selesai);
+    System.out.println(" Belum Selesai : " + (total - selesai));
+    
+    // Logic notifikasi
+    if (terlambat > 0) {
+        System.out.println(" WARNING       : Ada " + terlambat + " tugas TERLAMBAT!");
+    }
+    if (hariIni > 0) {
+        System.out.println(" REMINDER      : Ada " + hariIni + " tugas deadline HARI INI!");
+    }
+    
+    // Motivasi kecil
+    if (selesai == total && total > 0) {
+        System.out.println("\n Luar biasa! Semua tugas selesai.");
+    }
+    System.out.println("----------------------------------------");
+    }
+}
+

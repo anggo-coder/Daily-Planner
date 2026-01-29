@@ -11,12 +11,14 @@ public class Task {
         this.deadline = deadline;
         this.isCompleted = false;
     }
+    //getter
     public String getTitle() { return title; }
     public boolean isCompleted() { return isCompleted; }
     public void setCompleted(boolean completed) { isCompleted = completed; }
     public String getStatusSymbol() { return (isCompleted) ? "[v]" : "[ ]"; }
+    //setter
     public void markAsCompleted() { this.isCompleted = true; }
-    public LocalDate getDeadline() {
-        return deadline;
-    }
+    public LocalDate getDeadline() {return deadline; }
+    public void setTitle(String title) { this.title = title; }
+    public void setDeadline(LocalDate deadline) { this.deadline = deadline; }
 }
