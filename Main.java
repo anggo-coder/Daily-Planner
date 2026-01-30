@@ -1,214 +1,159 @@
-import java.util.*;
-import java.io.*;
+import java.util.Scanner;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 
 public class Main {
-    static ArrayList<Task> taskList = new ArrayList<>();
+    static TaskService service = new TaskService();
+    static Scanner scanner = new Scanner(System.in);
+
+    public static final String RESET = "\u001B[0m";
+    public static final String RED = "\u001B[31m";
+    public static final String GREEN = "\u001B[32m";
+    public static final String CYAN = "\u001B[36m";
 
     public static void main(String[] args) {
-        muatData();
-        Scanner scanner = new Scanner(System.in);
+        DatabaseConfig.setupDatabase();
         boolean isRunning = true;
+        System.out.println(CYAN + "Selamat Datang di Daily Planner Pro!" + RESET);
+        
+        tampilkanDashboard(); 
 
-        System.out.println("Selamat Datang di Daily Planner!");
-        tampilkanDashboard();
         while (isRunning) {
-            tampilkanMenu();
-            System.out.print("Pilih menu : ");
+            System.out.println("\n=== MENU UTAMA ===");
+            System.out.println("1. Tambah Tugas");
+            System.out.println("2. Lihat Tugas");
+            System.out.println("3. Tandai Selesai");
+            System.out.println("4. Hapus Tugas");
+            System.out.println("5. Cari Tugas");
+            System.out.println("6. Edit Tugas");
+            System.out.println("7. Keluar");
+            System.out.print("Pilih: ");
+            
             String pilihan = scanner.nextLine();
-
             switch (pilihan) {
-                case "1": tambahTugas(scanner); break;
-                case "2": lihatTugas(); break;
-                case "3": tandaiSelesai(scanner); break;
-                case "4": hapusTugas(scanner); break;
-                case "5": cariTugas(scanner); break;
-                case "6": editTugas(scanner); break;
-                case "7":
-                    System.out.println("Terima kasih! Sampai jumpa.");
-                    isRunning = false;
+                case "1": uiTambahTugas(); break;
+                case "2": uiLihatTugas(); break;
+                case "3": uiTandaiSelesai(); break;
+                case "4": uiHapusTugas(); break;
+                case "5": uiCariTugas(); break;
+                case "6": uiEditTugas(); break;
+                case "7": 
+                    System.out.println("Sampai jumpa!"); 
+                    isRunning = false; 
                     break;
-                default:
-                    System.out.println("⚠️ Pilihan tidak valid!");
+                default: System.out.println(RED + "[ERROR] Pilihan salah!" + RESET);
             }
         }
     }
 
-    private static void tampilkanMenu() {
-        System.out.println("\n=== MENU UTAMA ===");
-        System.out.println("1. Tambah Tugas");
-        System.out.println("2. Lihat Daftar Tugas (Sorted)");
-        System.out.println("3. Tandai Selesai");
-        System.out.println("4. Hapus Tugas");
-        System.out.println("5. Cari Tugas");
-        System.out.println("6. Edit Tugas");
-        System.out.println("7. Keluar");
-    }
-
-    private static void tambahTugas(Scanner scanner) {
-        System.out.print("Masukkan nama tugas: ");
-        String judul = scanner.nextLine();
-        if (judul.trim().isEmpty()) {
-            System.out.println("Gagal: Nama tidak boleh kosong!");
-            return;
-        }
-
-        System.out.print("Masukkan deadline (YYYY-MM-DD): ");
+    private static void uiTambahTugas() {
         try {
-            LocalDate deadline = LocalDate.parse(scanner.nextLine());
-            taskList.add(new Task(judul, deadline));
-            simpanData();
-            System.out.println("✅ Berhasil disimpan!");
+            System.out.print("Judul: ");
+            String judul = scanner.nextLine();
+            System.out.print("Deadline (YYYY-MM-DD): ");
+            LocalDate date = LocalDate.parse(scanner.nextLine());
+            
+            System.out.print("Prioritas (1.TINGGI, 2.SEDANG, 3.RENDAH): ");
+            int pChoice = Integer.parseInt(scanner.nextLine());
+            Priority p = (pChoice == 1) ? Priority.TINGGI : (pChoice == 2) ? Priority.SEDANG : Priority.RENDAH;
+
+            service.tambahTask(judul, date, p);
+            System.out.println(GREEN + "[OK] Berhasil disimpan!" + RESET);
+            
         } catch (DateTimeParseException e) {
-            System.out.println("⚠️ Gagal: Format tanggal salah!");
+            System.out.println(RED + "[ERROR] Format tanggal salah!" + RESET);
+        } catch (IllegalArgumentException e) {
+            System.out.println(RED + "[ERROR] " + e.getMessage() + RESET);
+        } catch (Exception e) {
+            System.out.println(RED + "[ERROR] Terjadi kesalahan input." + RESET);
         }
     }
 
-    private static void lihatTugas() {
-        if (taskList.isEmpty()) {
+    private static void uiLihatTugas() {
+        List<Task> list = service.getDaftarTugas();
+        
+        if (list.isEmpty()) {
             System.out.println("Daftar kosong.");
             return;
         }
-        Collections.sort(taskList, Comparator.comparing(Task::getDeadline));
+        
         System.out.println("\n--- DAFTAR TUGAS ---");
-        for (int i = 0; i < taskList.size(); i++) {
-            Task t = taskList.get(i);
-            String info = t.getDeadline().isBefore(LocalDate.now()) && !t.isCompleted() ? " [⚠️ TERLAMBAT]" : "";
-            System.out.println((i + 1) + ". " + t.getStatusSymbol() + " " + t.getTitle() + " (" + t.getDeadline() + ")" + info);
+        for (int i = 0; i < list.size(); i++) {
+            Task t = list.get(i);
+            String status = t.isCompleted() ? (GREEN + "[V]" + RESET) : "[ ]";
+            System.out.println((i + 1) + ". " + status + " [" + t.getPriority() + "] " + t.getTitle() + " (" + t.getDeadline() + ")");
         }
     }
 
-    private static void tandaiSelesai(Scanner scanner) {
-        lihatTugas();
-        System.out.print("Nomor tugas selesai: ");
+    private static void uiHapusTugas() {
+        uiLihatTugas();
+        System.out.print("Nomor hapus: ");
         try {
-            int nomor = Integer.parseInt(scanner.nextLine());
-            if (nomor > 0 && nomor <= taskList.size()) {
-                taskList.get(nomor - 1).setCompleted(true);
-                simpanData();
-                System.out.println("✅ Status diperbarui!");
+            int idx = Integer.parseInt(scanner.nextLine()) - 1;
+            if (service.hapusTask(idx)) {
+                System.out.println(GREEN + "[OK] Terhapus!" + RESET);
+            } else {
+                System.out.println(RED + "[ERROR] Nomor tidak valid!" + RESET);
             }
-        } catch (Exception e) { System.out.println("⚠️ Input tidak valid!"); }
-    }
-
-    private static void hapusTugas(Scanner scanner) {
-        lihatTugas();
-        System.out.print("Nomor tugas yang dihapus: ");
-        try {
-            int nomor = Integer.parseInt(scanner.nextLine());
-            taskList.remove(nomor - 1);
-            simpanData();
-            System.out.println("✅ Berhasil dihapus!");
-        } catch (Exception e) { System.out.println("⚠️ Gagal menghapus!"); }
-    }
-
-    private static void cariTugas(Scanner scanner) {
-        System.out.print("Kata kunci: ");
-        String key = scanner.nextLine().toLowerCase();
-        boolean ditemukan = false;
-        for (Task t : taskList) {
-            if (t.getTitle().toLowerCase().contains(key)) {
-                System.out.println(t.getStatusSymbol() + " " + t.getTitle() + " (" + t.getDeadline() + ")");
-                ditemukan = true;
-            }
+        } catch (NumberFormatException e) {
+            System.out.println(RED + "[ERROR] Input harus angka!" + RESET);
         }
-        if (!ditemukan) System.out.println("Tidak ditemukan.");
     }
 
-    private static void editTugas(Scanner scanner) {
-        lihatTugas();
-        System.out.print("Nomor yang akan diedit: ");
+    private static void uiTandaiSelesai() {
+        uiLihatTugas();
+        System.out.print("Nomor selesai: ");
         try {
-            int nomor = Integer.parseInt(scanner.nextLine());
-            Task t = taskList.get(nomor - 1);
-            
-            System.out.print("Judul baru (kosongkan jika tetap): ");
-            String jBaru = scanner.nextLine();
-            if (!jBaru.isEmpty()) t.setTitle(jBaru);
-
-            System.out.print("Deadline baru YYYY-MM-DD (kosongkan jika tetap): ");
-            String dBaru = scanner.nextLine();
-            if (!dBaru.isEmpty()) t.setDeadline(LocalDate.parse(dBaru));
-
-            simpanData();
-            System.out.println("✅ Berhasil diupdate!");
-        } catch (Exception e) { System.out.println("⚠️ Gagal edit!"); }
-    }
-
-    private static void simpanData() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("data.txt"))) {
-            for (Task t : taskList) {
-                writer.write((t.isCompleted() ? "1" : "0") + ";" + t.getTitle() + ";" + t.getDeadline());
-                writer.newLine();
+            int idx = Integer.parseInt(scanner.nextLine()) - 1;
+            if (service.tandaiSelesai(idx)) {
+                System.out.println(GREEN + "[OK] Status update!" + RESET);
+            } else {
+                System.out.println(RED + "[ERROR] Gagal update." + RESET);
             }
-        } catch (IOException e) { System.out.println("⚠️ Error simpan data."); }
+        } catch (Exception e) { System.out.println(RED + "[ERROR] Error input." + RESET); }
     }
 
-    private static void muatData() {
-        File file = new File("data.txt");
-        if (!file.exists()) return;
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] p = line.split(";");
-                if (p.length == 3) {
-                    Task t = new Task(p[1], LocalDate.parse(p[2]));
-                    if (p[0].equals("1")) t.markAsCompleted();
-                    taskList.add(t);
-                }
-            }
-        } catch (Exception e) { System.out.println("⚠️ Gagal muat data."); }
-    }
-    private static void tampilkanDashboard() {
-    System.out.println("\n----------------------------------------");
-    System.out.println("         DASHBOARD HARIAN ANDA");
-    System.out.println("----------------------------------------");
+    private static void uiCariTugas() {
+        System.out.print("Masukkan kata kunci: ");
+        String keyword = scanner.nextLine();
+        List<Task> hasil = service.cariTugas(keyword);
 
-    if (taskList.isEmpty()) {
-        System.out.println("   Belum ada tugas. Mulai produktif yuk!");
-        System.out.println("----------------------------------------");
-        return;
-    }
-
-    int total = taskList.size();
-    int selesai = 0;
-    int terlambat = 0;
-    int hariIni = 0;
-    LocalDate today = LocalDate.now();
-
-    for (Task t : taskList) {
-        if (t.isCompleted()) {
-            selesai++;
+        if (hasil.isEmpty()) {
+            System.out.println(RED + "[ERROR] Tidak ditemukan tugas dengan kata kunci '" + keyword + "'" + RESET);
         } else {
-            // Cek terlambat (Deadline sebelum hari ini & belum selesai)
-            if (t.getDeadline().isBefore(today)) {
-                terlambat++;
-            }
-            // Cek deadline hari ini
-            if (t.getDeadline().isEqual(today)) {
-                hariIni++;
+            System.out.println("\n[SEARCH] HASIL PENCARIAN:");
+            for (Task t : hasil) {
+                String status = t.isCompleted() ? (GREEN + "[V]" + RESET) : "[ ]";
+                System.out.println("- " + status + " [" + t.getPriority() + "] " + t.getTitle() + " (" + t.getDeadline() + ")");
             }
         }
     }
 
-    System.out.println(" Total Tugas   : " + total);
-    System.out.println(" Selesai       : " + selesai);
-    System.out.println(" Belum Selesai : " + (total - selesai));
-    
-    // Logic notifikasi
-    if (terlambat > 0) {
-        System.out.println(" WARNING       : Ada " + terlambat + " tugas TERLAMBAT!");
+    private static void uiEditTugas() {
+        uiLihatTugas();
+        System.out.print("Nomor edit: ");
+        try {
+            int idx = Integer.parseInt(scanner.nextLine()) - 1;
+            System.out.print("Judul baru (Enter jika tetap): ");
+            String judul = scanner.nextLine();
+            System.out.print("Deadline baru (Enter jika tetap): ");
+            String tgl = scanner.nextLine();
+            
+            System.out.print("Prioritas baru (1.TINGGI, 2.SEDANG, 3.RENDAH, 0.Tetap): ");
+            String pInput = scanner.nextLine();
+            int pChoice = pInput.isEmpty() ? 0 : Integer.parseInt(pInput);
+            
+            if (service.editTask(idx, judul, tgl, pChoice)) {
+                System.out.println(GREEN + "[OK] Data diperbarui!" + RESET);
+            } else {
+                System.out.println(RED + "[ERROR] Gagal edit." + RESET);
+            }
+        } catch (Exception e) { System.out.println(RED + "[ERROR] Error." + RESET); }
     }
-    if (hariIni > 0) {
-        System.out.println(" REMINDER      : Ada " + hariIni + " tugas deadline HARI INI!");
-    }
-    
-    // Motivasi kecil
-    if (selesai == total && total > 0) {
-        System.out.println("\n Luar biasa! Semua tugas selesai.");
-    }
-    System.out.println("----------------------------------------");
+
+    private static void tampilkanDashboard() {
+        System.out.println("[INFO] Total Tugas: " + service.getTotalTugas());
+        System.out.println("[INFO] Selesai: " + service.getTugasSelesai());
     }
 }
-
