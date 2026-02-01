@@ -18,12 +18,13 @@ public class DatabaseConfig {
 
     public static void setupDatabase() {
         String sql = "CREATE TABLE IF NOT EXISTS tasks ("
-                   + " id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                   + " title TEXT NOT NULL,"
-                   + " is_completed INTEGER DEFAULT 0,"
-                   + " deadline TEXT,"
-                   + " priority TEXT"
-                   + ");";
+                    + " id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    + " title TEXT NOT NULL,"
+                    + " category TEXT DEFAULT 'Umum'," 
+                    + " is_completed INTEGER DEFAULT 0,"
+                    + " deadline TEXT,"
+                    + " priority TEXT"
+                    + ");";
 
         try (Connection conn = connect();
              Statement stmt = conn.createStatement()) {

@@ -27,7 +27,8 @@ public class Main {
             System.out.println("4. Hapus Tugas");
             System.out.println("5. Cari Tugas");
             System.out.println("6. Edit Tugas");
-            System.out.println("7. Keluar");
+            System.out.println("7. Bersihkan Tugas Selesai");
+            System.out.println("8. Keluar");
             System.out.print("Pilih: ");
             
             String pilihan = scanner.nextLine();
@@ -38,7 +39,8 @@ public class Main {
                 case "4": uiHapusTugas(); break;
                 case "5": uiCariTugas(); break;
                 case "6": uiEditTugas(); break;
-                case "7": 
+                case "7": service.hapusTugasSelesai(); break; 
+                case "8": 
                     System.out.println("Sampai jumpa!"); 
                     isRunning = false; 
                     break;
@@ -47,20 +49,24 @@ public class Main {
         }
     }
 
-    private static void uiTambahTugas() {
-        try {
-            System.out.print("Judul: ");
-            String judul = scanner.nextLine();
-            System.out.print("Deadline (YYYY-MM-DD): ");
-            LocalDate date = LocalDate.parse(scanner.nextLine());
-            
-            System.out.print("Prioritas (1.TINGGI, 2.SEDANG, 3.RENDAH): ");
-            int pChoice = Integer.parseInt(scanner.nextLine());
-            Priority p = (pChoice == 1) ? Priority.TINGGI : (pChoice == 2) ? Priority.SEDANG : Priority.RENDAH;
+private static void uiTambahTugas() {
+    try {
+        System.out.print("Judul: ");
+        String judul = scanner.nextLine();
+        System.out.print("Kategori: ");
+        String kategori = scanner.nextLine();
+        System.out.print("Deadline (YYYY-MM-DD): ");
+        String inputTanggal = scanner.nextLine();
+        LocalDate date = LocalDate.parse(inputTanggal);
+        
+        System.out.print("Prioritas (1.TINGGI, 2.SEDANG, 3.RENDAH): ");
+        int pChoice = Integer.parseInt(scanner.nextLine());
+        Priority p = (pChoice == 1) ? Priority.TINGGI : (pChoice == 2) ? Priority.SEDANG : Priority.RENDAH;
 
-            service.tambahTask(judul, date, p);
-            System.out.println(GREEN + "[OK] Berhasil disimpan!" + RESET);
-            
+        // Pastikan urutan parameter sesuai dengan TaskService (Judul, Kategori, Tanggal, Prioritas)
+        service.tambahTask(judul, kategori, date, p); 
+        System.out.println(GREEN + "[OK] Berhasil disimpan!" + RESET);
+        
         } catch (DateTimeParseException e) {
             System.out.println(RED + "[ERROR] Format tanggal salah!" + RESET);
         } catch (IllegalArgumentException e) {
@@ -71,14 +77,41 @@ public class Main {
     }
 
     private static void uiLihatTugas() {
-        List<Task> list = service.getDaftarTugas();
+        System.out.println("\n--- MENU LIHAT TUGAS ---");
+        System.out.println("1. Semua Tugas");
+        System.out.println("2. Filter Prioritas TINGGI");
+        System.out.println("3. Filter Belum Selesai");
+        System.out.print("Pilih: ");
         
+        String subPilihan = scanner.nextLine();
+        List<Task> list = null;
+
+        switch (subPilihan) {
+            case "1":
+                list = service.getDaftarTugas();
+                break;
+            case "2":
+                list = service.filterByPriority(Priority.TINGGI);
+                break;
+            case "3":
+                list = service.filterByStatus(false);
+                break;
+            default:
+                System.out.println(RED + "[ERROR] Pilihan tidak ada, menampilkan semua." + RESET);
+                list = service.getDaftarTugas();
+        }
+        
+        tampilkanList(list);
+    }
+
+
+    private static void tampilkanList(List<Task> list) {
         if (list.isEmpty()) {
-            System.out.println("Daftar kosong.");
+            System.out.println("Tidak ada data yang sesuai.");
             return;
         }
         
-        System.out.println("\n--- DAFTAR TUGAS ---");
+        System.out.println("\nList Tugas");
         for (int i = 0; i < list.size(); i++) {
             Task t = list.get(i);
             String status = t.isCompleted() ? (GREEN + "[V]" + RESET) : "[ ]";
@@ -87,7 +120,8 @@ public class Main {
     }
 
     private static void uiHapusTugas() {
-        uiLihatTugas();
+        List<Task> list = service.getDaftarTugas();
+        tampilkanList(list);
         System.out.print("Nomor hapus: ");
         try {
             int idx = Integer.parseInt(scanner.nextLine()) - 1;
@@ -102,7 +136,8 @@ public class Main {
     }
 
     private static void uiTandaiSelesai() {
-        uiLihatTugas();
+        List<Task> list = service.getDaftarTugas();
+        tampilkanList(list);
         System.out.print("Nomor selesai: ");
         try {
             int idx = Integer.parseInt(scanner.nextLine()) - 1;
@@ -131,7 +166,8 @@ public class Main {
     }
 
     private static void uiEditTugas() {
-        uiLihatTugas();
+        List<Task> list = service.getDaftarTugas();
+        tampilkanList(list);
         System.out.print("Nomor edit: ");
         try {
             int idx = Integer.parseInt(scanner.nextLine()) - 1;

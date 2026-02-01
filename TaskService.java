@@ -1,110 +1,216 @@
-import java.io.*;
+import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 public class TaskService {
-    private ArrayList<Task> taskList = new ArrayList<>();
-    private final String FILE_NAME = "data.txt";
+    private List<Task> cachedTaskList = new ArrayList<>();
 
     public TaskService() {
-        muatData();
+        refreshData(); 
     }
 
-    public void tambahTask(String judul, LocalDate deadline, Priority priority) {
+    // FITUR CRUD DATABASE
+
+    public void tambahTask(String judul, String kategori, LocalDate deadline, Priority priority) {
         if (deadline.isBefore(LocalDate.now())) {
             throw new IllegalArgumentException("Deadline tidak boleh di masa lalu!");
         }
-        taskList.add(new Task(judul, deadline, priority));
-        simpanData();
+        String sql = "INSERT INTO tasks(title, category, deadline, priority, is_completed) VALUES(?, ?, ?, ?, 0)";
+        try (Connection conn = DatabaseConfig.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, judul);
+            pstmt.setString(2, kategori);
+            pstmt.setString(3, deadline.toString());
+            pstmt.setString(4, priority.toString());
+
+            pstmt.executeUpdate();
+            
+            refreshData();
+        } catch (SQLException e) {
+            System.out.println("[ERROR] Gagal tambah data: " + e.getMessage());
+        }
     }
 
     public List<Task> getDaftarTugas() {
-        Collections.sort(taskList, Comparator.comparing(Task::getDeadline));
-        return taskList;
+
+        return cachedTaskList;
     }
 
     public boolean hapusTask(int index) {
-        if (index >= 0 && index < taskList.size()) {
-            taskList.remove(index);
-            simpanData();
+        if (index < 0 || index >= cachedTaskList.size()) return false;
+
+        int idDb = cachedTaskList.get(index).getId();
+        String sql = "DELETE FROM tasks WHERE id = ?";
+
+        try (Connection conn = DatabaseConfig.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setInt(1, idDb);
+            pstmt.executeUpdate();
+            
+            refreshData();
             return true;
+        } catch (SQLException e) {
+            System.out.println("[ERROR] Gagal hapus data: " + e.getMessage());
+            return false;
         }
-        return false;
     }
 
     public boolean tandaiSelesai(int index) {
-        if (index >= 0 && index < taskList.size()) {
-            taskList.get(index).setCompleted(true);
-            simpanData();
+        if (index < 0 || index >= cachedTaskList.size()) return false;
+
+        int idDb = cachedTaskList.get(index).getId();
+        String sql = "UPDATE tasks SET is_completed = 1 WHERE id = ?";
+
+        try (Connection conn = DatabaseConfig.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setInt(1, idDb);
+            pstmt.executeUpdate();
+            
+            refreshData();
             return true;
+        } catch (SQLException e) {
+            System.out.println("[ERROR] Gagal update status: " + e.getMessage());
+            return false;
         }
-        return false;
     }
 
+    public boolean editTask(int index, String judul, String tglStr, int pChoice) {
+        if (index < 0 || index >= cachedTaskList.size()) return false;
+    
+        Task t = cachedTaskList.get(index);
+        int idDb = t.getId();
+        
+        String judulBaru = judul.isEmpty() ? t.getTitle() : judul;
+        String tglBaru = tglStr.isEmpty() ? t.getDeadline().toString() : tglStr;
+        String prioritasBaru = t.getPriority().toString();
+        
+        if (pChoice == 1) prioritasBaru = "TINGGI";
+        else if (pChoice == 2) prioritasBaru = "SEDANG";
+        else if (pChoice == 3) prioritasBaru = "RENDAH";
+    
+        String sql = "UPDATE tasks SET title = ?, deadline = ?, priority = ? WHERE id = ?";
+    
+        try (Connection conn = DatabaseConfig.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, judulBaru);
+            pstmt.setString(2, tglBaru);
+            pstmt.setString(3, prioritasBaru);
+            pstmt.setInt(4, idDb);
+            pstmt.executeUpdate();
+            
+            refreshData();
+            return true;
+        } catch (SQLException e) {
+            System.out.println("[ERROR] Gagal edit data: " + e.getMessage());
+            return false;
+        }
+    }
+    
     public List<Task> cariTugas(String keyword) {
         List<Task> hasil = new ArrayList<>();
-        for (Task t : taskList) {
-            if (t.getTitle().toLowerCase().contains(keyword.toLowerCase())) {
-                hasil.add(t);
+        String sql = "SELECT * FROM tasks WHERE title LIKE ?";
+
+        try (Connection conn = DatabaseConfig.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, "%" + keyword + "%"); // % artinya "mengandung"
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                hasil.add(mapResultSetToTask(rs));
             }
+        } catch (SQLException e) {
+            System.out.println("[ERROR] Pencarian gagal: " + e.getMessage());
+        }
+        return hasil;
+    }
+        public List<Task> filterByPriority(Priority p) {
+        List<Task> hasil = new ArrayList<>();
+        String sql = "SELECT * FROM tasks WHERE priority = ? ORDER BY deadline ASC";
+
+        try (Connection conn = DatabaseConfig.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, p.toString());
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                hasil.add(mapResultSetToTask(rs));
+            }
+        } catch (SQLException e) {
+            System.out.println("[ERROR] Gagal filter prioritas: " + e.getMessage());
         }
         return hasil;
     }
 
-    public boolean editTask(int index, String judul, String tglStr, int pChoice) {
-        if (index >= 0 && index < taskList.size()) {
-            Task t = taskList.get(index);
-            if (!judul.isEmpty()) t.setTitle(judul);
-            if (!tglStr.isEmpty()) t.setDeadline(LocalDate.parse(tglStr));
+    public List<Task> filterByStatus(boolean isCompleted) {
+        List<Task> hasil = new ArrayList<>();
+        String sql = "SELECT * FROM tasks WHERE is_completed = ? ORDER BY deadline ASC";
+
+        try (Connection conn = DatabaseConfig.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
-            if (pChoice == 1) t.setPriority(Priority.TINGGI);
-            else if (pChoice == 2) t.setPriority(Priority.SEDANG);
-            else if (pChoice == 3) t.setPriority(Priority.RENDAH);
-            
-            simpanData();
-            return true;
-        }
-        return false;
-    }
+            pstmt.setInt(1, isCompleted ? 1 : 0);
+            ResultSet rs = pstmt.executeQuery();
 
-    private void simpanData() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME))) {
-            for (Task t : taskList) {
-                String status = t.isCompleted() ? "1" : "0";
-                writer.write(status + ";" + t.getTitle() + ";" + t.getDeadline() + ";" + t.getPriority());
-                writer.newLine();
+            while (rs.next()) {
+                hasil.add(mapResultSetToTask(rs));
             }
-        } catch (IOException e) {
-            System.err.println("Gagal simpan data.");
+        } catch (SQLException e) {
+            System.out.println("[ERROR] Gagal filter status: " + e.getMessage());
         }
+        return hasil;
     }
+    private void refreshData() {
+        cachedTaskList.clear();
+        String sql = "SELECT * FROM tasks ORDER BY deadline ASC"; // Sorting langsung dari SQL
 
-    private void muatData() {
-        File file = new File(FILE_NAME);
-        if (!file.exists()) return;
+        try (Connection conn = DatabaseConfig.connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] p = line.split(";");
-                if (p.length == 4) { 
-                    Task t = new Task(p[1], LocalDate.parse(p[2]), Priority.valueOf(p[3]));
-                    if (p[0].equals("1")) t.markAsCompleted();
-                    taskList.add(t);
-                }
+            while (rs.next()) {
+                cachedTaskList.add(mapResultSetToTask(rs));
             }
-        } catch (Exception e) {
-            System.err.println("Gagal muat data: " + e.getMessage());
+        } catch (SQLException e) {
+            System.out.println("[ERROR] Gagal memuat data: " + e.getMessage());
         }
     }
 
-    public int getTotalTugas() { return taskList.size(); }
+    private Task mapResultSetToTask(ResultSet rs) throws SQLException {
+        return new Task(
+            rs.getInt("id"),
+            rs.getString("title"),
+            rs.getString("category"),
+            LocalDate.parse(rs.getString("deadline")),
+            Priority.valueOf(rs.getString("priority")),
+            rs.getInt("is_completed") == 1
+        );
+    }
+    
+    public int getTotalTugas() { return cachedTaskList.size(); }
     public int getTugasSelesai() {
         int count = 0;
-        for (Task t : taskList) if (t.isCompleted()) count++;
+        for (Task t : cachedTaskList) if (t.isCompleted()) count++;
         return count;
+    }
+    public void hapusTugasSelesai() {
+    String sql = "DELETE FROM tasks WHERE is_completed = 1";
+    try (Connection conn = DatabaseConfig.connect();
+         Statement stmt = conn.createStatement()) {
+        stmt.executeUpdate(sql);
+        refreshData();
+        int jumlahHapus = stmt.executeUpdate(sql);
+        if (jumlahHapus > 0) {
+            System.out.println("\u001B[32m[OK] Berhasil menghapus " + jumlahHapus + " tugas yang sudah selesai!\u001B[0m");
+        } else {
+            System.out.println("\u001B[31m[INFO] Tidak ada tugas selesai yang perlu dihapus.\u001B[0m");
+        }
+    } catch (SQLException e) { System.out.println(e.getMessage()); }
     }
 }
