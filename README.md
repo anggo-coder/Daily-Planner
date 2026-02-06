@@ -73,10 +73,10 @@ java -cp ".:sqlite-jdbc-3.46.0.0.jar" Main
 #(Pastikan nama file jar sesuai dengan versi yang Anda unduh, contoh di atas menggunakan versi 3.46.0.0) 
 ```
 
-## **📄 Lisensi**
+**📄 Lisensi**
 Didistribusikan di bawah MIT License. Lihat file LICENSE untuk informasi lebih lanjut.
 
-## **👨‍💻 Author**
+**👨‍💻 Author**
 Jika ada pertanyaan, saran, atau ingin berdiskusi mengenai proyek ini, silakan hubungi saya:
 
 Angga Mahardhika Kurniawan
