@@ -1,24 +1,88 @@
-# Daily Planner Pro - Java CLI
+# Daily Planner
 
-Aplikasi manajemen tugas harian berbasis terminal (CLI) dengan arsitektur modular, dukungan database SQLite, dan sistem kategorisasi tugas.
+[![Java Version](https://img.shields.io/badge/Java-11%2B-orange.svg)](https://www.oracle.com/java/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Database](https://img.shields.io/badge/Database-SQLite-blue.svg)](https://www.sqlite.org/)
 
-## Fitur Utama
-- **Separation of Concerns:** Logika bisnis (Service) terpisah sepenuhnya dari antarmuka pengguna (Main).
-- **Persistent Storage:** Menggunakan SQLite Database untuk penyimpanan data yang aman dan permanen.
-- **Categorization System:** Mendukung pengelompokan tugas (misal: Kerja, Pribadi, Kuliah).
-- **Advanced Filtering:** Fitur penyaringan tugas berdasarkan Prioritas dan Status.
-- **Bulk Action:** Fitur pembersihan otomatis untuk menghapus semua tugas yang sudah selesai sekaligus.
-- **Input Validation:** Validasi ketat untuk format tanggal dan pencegahan input deadline masa lalu.
+**Daily Planner** adalah solusi manajemen tugas berbasis *command-line interface* (CLI) yang dikembangkan menggunakan Java. Aplikasi ini dirancang untuk mengoptimalkan produktivitas harian melalui manajemen tugas yang komprehensif, sistem prioritas berbasis visual, dan persistensi data yang andal.
 
-## Struktur File
-- **Main.java:** Menangani interaksi user (CLI), validasi input, dan routing menu.
-- **TaskService.java:** Mengelola logika CRUD (Create, Read, Update, Delete) dan eksekusi query SQL.
-- **Task.java:** Model objek tugas yang mencakup ID, Judul, Kategori, Deadline, Prioritas, dan Status.
-- **Priority.java:** Enum untuk standarisasi level prioritas (TINGGI, SEDANG, RENDAH).
-- **DatabaseConfig.java:** Mengelola koneksi JDBC ke file database `planner.db`.
+<p align="center">
+  <img src="screenshots/menu_dashboard.png" alt="Main Dashboard Interface" width="650">
+</p>
 
-## Cara Menjalankan
-1. Pastikan Java Development Kit (JDK) sudah terinstal.
-2. Tambahkan library `sqlite-jdbc.jar` ke dalam *classpath* atau *Referenced Libraries*.
-3. Compile kode sumber: `javac -d bin src/*.java`.
-4. Jalankan aplikasi: `java -cp "bin;lib/sqlite-jdbc.jar" Main`.
+## 🚀 Fitur Utama
+
+* **Real-time Productivity Dashboard:** Visualisasi instan terhadap total tugas, status tertunda, dan tugas dengan urgensi tinggi.
+* **Comprehensive Task Management (CRUD):** Implementasi lengkap pembuatan, pembacaan, pembaruan, dan penghapusan data tugas.
+
+    > **Tampilan Daftar Tugas:**
+    > ![Task List View](screenshots/list_tugas.png)
+
+* **Data Persistence with SQLite:** Integrasi *database* relasional untuk menjamin integritas dan keamanan data saat aplikasi ditutup.
+* **Intelligent Input Validation:** Sistem proteksi berbasis aturan untuk memastikan akurasi format tanggal (ISO 8601) dan validitas waktu *deadline*.
+* **ANSI-based Visual Priority:** Indikator visual dinamis (Merah/Kuning/Hijau) untuk diferensiasi tingkat urgensi tugas secara cepat.
+* **Search & Dynamic Filtering:** Mesin pencari berbasis kata kunci serta filter modular berdasarkan status penyelesaian dan level prioritas.
+* **Data Export (CSV):** Fitur ekspor data ke format CSV yang kompatibel dengan Microsoft Excel untuk keperluan pelaporan eksternal.
+
+## 🛠️ Arsitektur & Teknologi
+
+Proyek ini mengimplementasikan prinsip **Separation of Concerns** dengan struktur yang modular:
+
+| Komponen | Deskripsi |
+| :--- | :--- |
+| **Bahasa Pemrograman** | Java (JDK 11+) |
+| **Database** | SQLite (Lightweight Relational Database) |
+| **Driver** | JDBC (Java Database Connectivity) |
+| **Design Pattern** | Model-View-Controller (MVC) Approach |
+
+### Struktur File
+* `Main.java`: Bertanggung jawab atas *User Interface* (UI) dan alur navigasi aplikasi (View).
+* `TaskService.java`: Layer logika bisnis dan orkestrasi operasi *database* (Controller).
+* `Task.java`: Representasi entitas data tugas (Model).
+* `DatabaseConfig.java`: Konfigurasi koneksi JDBC dan inisialisasi skema *database*.
+* `Priority.java`: Definisi tipe data enumerasi untuk manajemen urgensi.
+
+## ⚙️ Instalasi dan Pengoperasian
+
+### Prasyarat
+1. **Java Development Kit (JDK)** 11 atau versi terbaru.
+2. **SQLite JDBC Driver** (file `.jar`).
+   * [Download Driver di sini (Maven Repository)](https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.46.0.0/sqlite-jdbc-3.46.0.0.jar)
+   * *Catatan: Letakkan file `.jar` driver di dalam folder proyek yang sama dengan kode program.*
+
+### Instruksi Menjalankan Aplikasi
+
+Buka terminal atau CMD di dalam folder proyek, lalu jalankan perintah berikut sesuai sistem operasi Anda:
+
+#### **Windows (Command Prompt / PowerShell)**
+```bash
+# Kompilasi seluruh modul
+javac -cp ".;sqlite-jdbc-3.46.0.0.jar" *.java
+
+# Eksekusi aplikasi
+java -cp ".;sqlite-jdbc-3.46.0.0.jar" Main
+
+Linux & macOS (Terminal)
+''bash
+# Kompilasi seluruh modul (Gunakan titik dua ':' sebagai separator)
+javac -cp ".:sqlite-jdbc-3.46.0.0.jar" *.java
+
+# Eksekusi aplikasi
+java -cp ".:sqlite-jdbc-3.46.0.0.jar" Main
+(Pastikan nama file jar sesuai dengan versi yang Anda unduh, contoh di atas menggunakan versi 3.46.0.0)
+
+📄 Lisensi
+Didistribusikan di bawah MIT License. Lihat file LICENSE untuk informasi lebih lanjut.
+
+👨‍💻 Author
+Jika ada pertanyaan, saran, atau ingin berdiskusi mengenai proyek ini, silakan hubungi saya:
+
+Angga Mahardhika Kurniawan
+
+Email: anggamahardhika06@gmail.com
+LinkedIn: Angga Mahardhika
+GitHub: https://github.com/anggo-coder
+Project Repository:
+https://github.com/anggo-coder/Daily-Planner
+
+If you find this project helpful, please consider giving it a ⭐ to support the development.

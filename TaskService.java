@@ -1,7 +1,11 @@
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class TaskService {
     private List<Task> cachedTaskList = new ArrayList<>();
@@ -9,8 +13,6 @@ public class TaskService {
     public TaskService() {
         refreshData(); 
     }
-
-    // FITUR CRUD DATABASE
 
     public void tambahTask(String judul, String kategori, LocalDate deadline, Priority priority) {
         if (deadline.isBefore(LocalDate.now())) {
@@ -26,7 +28,6 @@ public class TaskService {
             pstmt.setString(4, priority.toString());
 
             pstmt.executeUpdate();
-            
             refreshData();
         } catch (SQLException e) {
             System.out.println("[ERROR] Gagal tambah data: " + e.getMessage());
@@ -34,7 +35,6 @@ public class TaskService {
     }
 
     public List<Task> getDaftarTugas() {
-
         return cachedTaskList;
     }
 
@@ -118,7 +118,7 @@ public class TaskService {
         try (Connection conn = DatabaseConfig.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
-            pstmt.setString(1, "%" + keyword + "%"); // % artinya "mengandung"
+            pstmt.setString(1, "%" + keyword + "%"); 
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
@@ -129,7 +129,8 @@ public class TaskService {
         }
         return hasil;
     }
-        public List<Task> filterByPriority(Priority p) {
+
+    public List<Task> filterByPriority(Priority p) {
         List<Task> hasil = new ArrayList<>();
         String sql = "SELECT * FROM tasks WHERE priority = ? ORDER BY deadline ASC";
 
@@ -166,9 +167,10 @@ public class TaskService {
         }
         return hasil;
     }
+
     private void refreshData() {
         cachedTaskList.clear();
-        String sql = "SELECT * FROM tasks ORDER BY deadline ASC"; // Sorting langsung dari SQL
+        String sql = "SELECT * FROM tasks ORDER BY deadline ASC"; 
 
         try (Connection conn = DatabaseConfig.connect();
              Statement stmt = conn.createStatement();
@@ -194,23 +196,81 @@ public class TaskService {
     }
     
     public int getTotalTugas() { return cachedTaskList.size(); }
+    
     public int getTugasSelesai() {
         int count = 0;
         for (Task t : cachedTaskList) if (t.isCompleted()) count++;
         return count;
     }
+
     public void hapusTugasSelesai() {
-    String sql = "DELETE FROM tasks WHERE is_completed = 1";
-    try (Connection conn = DatabaseConfig.connect();
-         Statement stmt = conn.createStatement()) {
-        stmt.executeUpdate(sql);
-        refreshData();
-        int jumlahHapus = stmt.executeUpdate(sql);
-        if (jumlahHapus > 0) {
-            System.out.println("\u001B[32m[OK] Berhasil menghapus " + jumlahHapus + " tugas yang sudah selesai!\u001B[0m");
-        } else {
-            System.out.println("\u001B[31m[INFO] Tidak ada tugas selesai yang perlu dihapus.\u001B[0m");
+        String sql = "DELETE FROM tasks WHERE is_completed = 1";
+        try (Connection conn = DatabaseConfig.connect();
+             Statement stmt = conn.createStatement()) {
+            
+            int jumlahHapus = stmt.executeUpdate(sql);
+            if (jumlahHapus > 0) {
+                System.out.println("\u001B[32m[OK] Berhasil menghapus " + jumlahHapus + " tugas yang sudah selesai!\u001B[0m");
+                refreshData();
+            } else {
+                System.out.println("\u001B[31m[INFO] Tidak ada tugas selesai yang perlu dihapus.\u001B[0m");
+            }
+        } catch (SQLException e) { 
+            System.out.println(e.getMessage()); 
         }
-    } catch (SQLException e) { System.out.println(e.getMessage()); }
+    }
+
+    public Map<String, Integer> getStatistik() {
+        Map<String, Integer> stats = new HashMap<>();
+        String sql = "SELECT " +
+                     "COUNT(*) as total, " +
+                     "SUM(CASE WHEN is_completed = 0 THEN 1 ELSE 0 END) as pending, " +
+                     "SUM(CASE WHEN priority = 'TINGGI' AND is_completed = 0 THEN 1 ELSE 0 END) as urgent " +
+                     "FROM tasks";
+                    
+        try (Connection conn = DatabaseConfig.connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            
+            if (rs.next()) {
+                stats.put("total", rs.getInt("total"));
+                stats.put("pending", rs.getInt("pending"));
+                stats.put("urgent", rs.getInt("urgent"));
+            }
+        } catch (SQLException e) {
+            System.out.println("[ERROR STATS] " + e.getMessage());
+        }
+        return stats;
+    }
+
+    public boolean exportToCSV(String filename) {
+        String sql = "SELECT * FROM tasks";
+        try (Connection conn = DatabaseConfig.connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql);
+             FileWriter writer = new FileWriter(filename)) {
+            
+            writer.append("ID,Judul,Kategori,Deadline,Prioritas,Status\n");
+            
+            while (rs.next()) {
+                writer.append(String.valueOf(rs.getInt("id")));
+                writer.append(",");
+                writer.append("\"" + rs.getString("title") + "\"");
+                writer.append(",");
+                writer.append(rs.getString("category"));
+                writer.append(",");
+                writer.append(rs.getString("deadline"));
+                writer.append(",");
+                writer.append(rs.getString("priority"));
+                writer.append(",");
+                writer.append(rs.getInt("is_completed") == 1 ? "Selesai" : "Belum");
+                writer.append("\n"); 
+            }
+            return true; 
+            
+        } catch (SQLException | IOException e) {
+            System.out.println("[ERROR EXPORT] " + e.getMessage());
+            return false; 
+        }
     }
 }
