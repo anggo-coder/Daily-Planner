@@ -61,20 +61,22 @@ javac -cp ".;sqlite-jdbc-3.46.0.0.jar" *.java
 
 # Eksekusi aplikasi
 java -cp ".;sqlite-jdbc-3.46.0.0.jar" Main
+```
 
-Linux & macOS (Terminal)
-''bash
+#### **Linux & macOS (Terminal)**
+```bash
 # Kompilasi seluruh modul (Gunakan titik dua ':' sebagai separator)
 javac -cp ".:sqlite-jdbc-3.46.0.0.jar" *.java
 
 # Eksekusi aplikasi
 java -cp ".:sqlite-jdbc-3.46.0.0.jar" Main
-(Pastikan nama file jar sesuai dengan versi yang Anda unduh, contoh di atas menggunakan versi 3.46.0.0)
+#(Pastikan nama file jar sesuai dengan versi yang Anda unduh, contoh di atas menggunakan versi 3.46.0.0) 
+```
 
-📄 Lisensi
+## **📄 Lisensi**
 Didistribusikan di bawah MIT License. Lihat file LICENSE untuk informasi lebih lanjut.
 
-👨‍💻 Author
+## **👨‍💻 Author**
 Jika ada pertanyaan, saran, atau ingin berdiskusi mengenai proyek ini, silakan hubungi saya:
 
 Angga Mahardhika Kurniawan
