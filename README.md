@@ -82,7 +82,7 @@ Jika ada pertanyaan, saran, atau ingin berdiskusi mengenai proyek ini, silakan h
 Angga Mahardhika Kurniawan
 
 * **Email:** anggamahardhika06@gmail.com
-* **LinkedIn:** [Angga Mahardhika](https://www.linkedin.com/in/angga-mahardhika-637016382)
+* **LinkedIn:** [Angga Mahardhika](https://www.linkedin.com/in/angga-mahardhika-kurniawan-637016382)
 * **GitHub:** [anggo-coder](https://github.com/anggo-coder)
 * **Project Repository:** [Daily-Planner](https://github.com/anggo-coder/Daily-Planner)
 
